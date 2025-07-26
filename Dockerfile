@@ -1,24 +1,23 @@
-# Stage 1: Build WAR file using Maven
-FROM maven:3.9.6-eclipse-temurin-17 AS builder
+# Stage 1: Build the WAR using Maven
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy pom.xml and source code
-COPY pom.xml .
-COPY src ./src
+# Copy all project files into the container
+COPY . .
 
-# Build the WAR file
-RUN mvn clean package
+# Run Maven to build the WAR (skips tests if needed)
+RUN mvn clean package -DskipTests
 
-# Stage 2: Deploy WAR to Tomcat
+# Stage 2: Use Tomcat to serve the WAR
 FROM tomcat:9.0-jdk17-temurin
 
-# Remove default webapps
+# Clean the default webapps folder
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Copy built WAR from stage 1
-COPY --from=builder /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
+# Copy the built WAR file into the Tomcat webapps folder as ROOT.war
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
 
-# Expose port
+# Expose the default Tomcat port
 EXPOSE 8080
