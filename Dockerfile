@@ -1,12 +1,11 @@
-# Use Maven to build the application
-FROM maven:3.9.6-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+FROM tomcat:9.0-jdk17-temurin
 
-# Use a lighter JRE image to run the JAR
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-COPY --from=build /app/target/StudentManagementSystem.jar app.jar
+# Remove default web apps
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copy your WAR file into the webapps folder
+COPY target/student-management.war /usr/local/tomcat/webapps/ROOT.war
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+CMD ["catalina.sh", "run"]
